@@ -11,6 +11,7 @@ UBIC_ESTRELLASX2: .dword 493,277,607,85,460,139,59,65,410,375,23,484,566,369,466
 UBIC_ESTRELLASY2: .dword 422,227,19,129,449,131,387,144,348,63,45,41,233,308,93,53 // Posiciones iniciales en Y de las estrellas grises
 BASE_PIXELES: .dword 0,0,0,0,1,0,0,1,0,0,1,1,0,1,1,0,1,1,1,1,1,1,1,2,1,1,2,1,2,1,2,2,2,2,3,2,3,3,3,4,3,4,3,4,5,4,5,5,6,6,7,7,7,8,9,10,13,15,19 // Secuencia de números útilizada para graficar el semicirculo correspondiente a la base de la nave
 
+.text
 
 .globl main
 main:
