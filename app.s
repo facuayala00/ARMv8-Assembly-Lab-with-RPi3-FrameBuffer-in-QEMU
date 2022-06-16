@@ -110,6 +110,49 @@ pintar_linea_horizontal:
 	add sp,sp, #24 // POP
 	br lr // Salida de la función
 
+	// PINTAR LINEA DEPENDIENDO DEL COLOR DEL PIXEL
+	// -------------------------------
+	// Argumentos:
+	// 	X0 - color que se utilizará para pintar
+	// 	X1 - posición vertical (eje x) del pixel inicial. Posiciones validas [0-479]
+	// 	X2 - posición horizontal (eje y) del pixel inicial. Posiciones validas [0-639]
+	// 	X3 - cantidad de pixeles que se van a pintar. Mínimo 1
+	//	X4 - Color secundario que se utiliza si el pixel es de color X5
+	//	X5 - Color de pixel a chequear
+pintar_linea_dependiendo_del_color_del_pixel:
+	sub sp, sp, #24 // PUSH
+	stur lr, [sp, #16] // PUSH
+	stur x3, [sp, #8] // PUSH
+	stur x1, [sp] // PUSH
+
+	// Calculo el indice de la primera dirección donde debo pintar
+	madd x9, x2, x22, x1 // x + (y * 640)
+	add x9, x20, x9, lsl 2 // Dirección de inicio + 4 * [x + (y * 640)]
+
+	pintar_pixel_condicionalmente: // inicio el loop
+	ldur w14, [x9] // Cargo a x11 con el color del pixel
+	cmp w5, w14
+	B.EQ pintar_pixel_de_color_secundario
+	B pintar_pixel_de_color_primario
+
+	pintar_pixel_de_color_secundario:
+	stur w4, [x9] // Pinto el pixel
+	B calcular_siguiente_direccion_de_memoria_de_pixel_condicional
+
+	pintar_pixel_de_color_primario:
+	stur w0, [x9] // Pinto el pixel
+
+	calcular_siguiente_direccion_de_memoria_de_pixel_condicional:
+	add x9, x9, #4 // Guardo en x9 la próxima dirección a pintar
+	sub x3, x3, #1 // Resto uno a la cantidad de pixeles que debo pintar
+	cbnz x3, pintar_pixel_condicionalmente // Reviso si todavía tengo que pintar pixeles para decidir si seguir pintando o no
+
+
+	ldur x1, [sp] // POP
+	ldur x3, [sp, #8] // POP
+	ldur lr, [sp, #16] // POP
+	add sp,sp, #24 // POP
+	br lr // Salida de la función
 
 
 
@@ -333,6 +376,11 @@ cupula_nave:
 	movz x0, 0xCAFF
 	movk x0, 0x00C0, lsl 16
 
+	movz x4, 0x8db2
+	movk x4, 0x86, lsl 16 // guardar color 0x868db2 en X4 para luego llamar a pintar_linea_dependiendo_del_color_del_pixel
+
+	movz x5, 0x7DFF
+	movk x5, 0x00C7, lsl 16 // guardar color 0xC77DFF en X5 para luego llamar a pintar_linea_dependiendo_del_color_del_pixel
 
 	mov x1, #160 // Asigno a x1 las coordenadas en X de donde comienzo a dibujar la nave
 	mov x2, #256 // Asigno a x2 las coordenadas en Y de donde comienzo a dibujar la nave
@@ -343,7 +391,7 @@ cupula_nave:
 
 	loop7: // Inicio el bucle para pintar la parte de abajo de la base de la nave
 	ldur x12, [x11, #0] // Guardo en x12 el elemento del arreglo que corresponde
-	bl pintar_linea_horizontal // Llamada a la función para pintar la linea
+	bl pintar_linea_dependiendo_del_color_del_pixel // Llamada a la función para pintar la linea
 	add x1, x1, x12 // Agrego a la coordenada en X donde dibujo la linea la cantidad que diga segun los pasos para dibujar la circunferencia
 	sub x2, x2, #1 // Subo una coordenada en Y
 	lsl x12, x12, #1 // Calculo auxiliar para la próxima linea
@@ -362,7 +410,7 @@ cupula_nave:
 
 	loop8: // Inicio el bucle para pintar la parte de arriba de la base de la nave
 	ldur x12, [x11, #0] // Guardo en x12 el elemento del arreglo que corresponde
-	bl pintar_linea_horizontal // Llamada a la función para pintar la linea
+	bl pintar_linea_dependiendo_del_color_del_pixel // Llamada a la función para pintar la linea
 	add x1, x1, x12 // Agrego a la coordenada en X donde dibujo la linea la cantidad que diga segun los pasos para dibujar la circunferencia
 	add x2, x2, #1  // Bajo una coordenada en Y
 	lsl x12, x12, #1 // Calculo auxiliar para la próxima linea
