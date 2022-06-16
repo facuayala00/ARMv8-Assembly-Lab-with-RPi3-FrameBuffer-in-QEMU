@@ -28,12 +28,6 @@ main:
  	bl base_nave // Imprimir la base de la nave
 	bl cupula_nave // Imprimir cupula de la nave
 
-/* 	mov x0, #0xFFFFFF
-	mov x7, #0x33
-	mov x1, #4
-	mov x2, #60
-	bl estrella */
-
 	// Ahora inicia un loop que está constantemente corriendo las estrellas hacia un costado (Hace 3 ciclos de estrellas blancas y 1 de estrellas grises "por vuelta")
  	pintar_estrellas_grises: 
 	movz x0, #0x7D7D
