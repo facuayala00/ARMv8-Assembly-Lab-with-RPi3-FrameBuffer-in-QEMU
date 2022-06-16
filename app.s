@@ -403,7 +403,7 @@ cupula_nave:
 	
 
 	mov x1, #160 // Asigno a x1 las coordenadas en X de donde comienzo a dibujar la nave
-	mov x2, #256 // Asigno a x2 las coordenadas en Y de donde comienzo a dibujar la nave
+	mov x2, #257 // Asigno a x2 las coordenadas en Y de donde comienzo a dibujar la nave
 	mov x3, #320 // Asigno a x3 la cantidad de pixeles que va a tener la parte más amplia de la nave
 	mov x10, #40 // Asigno a x10 la mitad de la cantidad de pixeles que va a tener de altura la nave
 	ldr x11, =CUPULA_PIXELES_ABAJO // Guardo en x11 la dirección de los pasos para dibujar la circunferencia
