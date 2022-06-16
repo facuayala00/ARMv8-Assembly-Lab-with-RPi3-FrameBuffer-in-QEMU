@@ -10,7 +10,8 @@ UBIC_ESTRELLASY1: .dword 222,140,303,75,237,262,189,53,391,303,2,13,517,420,586,
 UBIC_ESTRELLASX2: .dword 493,277,607,85,460,139,59,65,410,375,23,484,566,369,466,611 // Posiciones iniciales en X de las estrellas grises
 UBIC_ESTRELLASY2: .dword 422,227,19,129,449,131,387,144,348,63,45,41,233,308,93,53 // Posiciones iniciales en Y de las estrellas grises
 BASE_PIXELES: .dword 0,0,0,0,1,0,0,1,0,0,1,1,0,1,1,0,1,1,1,1,1,1,1,2,1,1,2,1,2,1,2,2,2,2,3,2,3,3,3,4,3,4,3,4,5,4,5,5,6,6,7,7,7,8,9,10,13,15,19 // Secuencia de números útilizada para graficar el semicirculo correspondiente a la base de la nave
-
+CUPULA_PIXELES_ARRIBA: .dword 0,0,0,0,1,0,0,1,0,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,2,1,1,2,1,1,2,1,1,2,1,2,1,2,2,2,2,2,2,2,3,3,3,3,3,4,4,4,5,6,6,7,11,13,17
+CUPULA_PIXELES_ABAJO: .dword 0,0,0,0,1,0,0,1,1,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,4,4,4,5,5,6,6,7,7,9,11,13,17
 
 .globl main
 main:
@@ -23,7 +24,7 @@ main:
 	bl pintar_fondo 	// Establecer el color del fondo al indicado
 
  	bl base_nave // Imprimir la base de la nave
-
+	bl cupula_nave // Imprimir cupula de la nave
 
 /* 	mov x0, #0xFFFFFF
 	mov x7, #0x33
@@ -313,6 +314,67 @@ base_nave:
 	sub x10, x10, #1 // Resto 1 a la cantidad de lineas que tengo que hacer
 	add x11, x11 , #8 // Paso al siguiente elemento del arreglo de pasos para dibujar la circunferencia
 	cbnz x10, loop6 // Reviso si ya hice todas las lineas
+
+
+	ldur x1, [sp] // POP
+	ldur x2, [sp, #8] // POP
+	ldur x3, [sp, #16] // POP
+	ldur lr, [sp, #24] // POP
+	add sp,sp, #32 // POP
+	br lr // Salida de la función
+
+	// CUPULA NAVE
+	// -------------------------------
+	// Explicación:
+	// 	Dibuja la cupula de la nave espacial (semicirculo)
+cupula_nave:
+	sub sp, sp, #32 // PUSH
+	stur lr, [sp, #24] // PUSH
+	stur x3, [sp, #16] // PUSH
+	stur x2, [sp, #8] // PUSH	
+	stur x1, [sp] // PUSH	
+
+	movz x0, 0xCAFF
+	movk x0, 0x00C0, lsl 16
+
+
+	mov x1, #160 // Asigno a x1 las coordenadas en X de donde comienzo a dibujar la nave
+	mov x2, #256 // Asigno a x2 las coordenadas en Y de donde comienzo a dibujar la nave
+	mov x3, #320 // Asigno a x3 la cantidad de pixeles que va a tener la parte más amplia de la nave
+	mov x10, #80 // Asigno a x10 la mitad de la cantidad de pixeles que va a tener de altura la nave
+	ldr x11, =CUPULA_PIXELES_ARRIBA // Guardo en x11 la dirección de los pasos para dibujar la circunferencia
+
+
+	loop7: // Inicio el bucle para pintar la parte de abajo de la base de la nave
+	ldur x12, [x11, #0] // Guardo en x12 el elemento del arreglo que corresponde
+	bl pintar_linea_horizontal // Llamada a la función para pintar la linea
+	add x1, x1, x12 // Agrego a la coordenada en X donde dibujo la linea la cantidad que diga segun los pasos para dibujar la circunferencia
+	sub x2, x2, #1 // Subo una coordenada en Y
+	lsl x12, x12, #1 // Calculo auxiliar para la próxima linea
+	sub x3, x3, x12 // Resto a x3 2 veces lo sumado a x1, para que me quede centrado (el punto más a la izquierda de la linea se corre hacia la derecha "z" pixeles y yo achico la cantidad de pixeles de la linea "2*z")
+
+	sub x10, x10, #1 // Resto 1 a la cantidad de lineas que tengo que hacer
+	add x11, x11 , #8 // Paso al siguiente elemento del arreglo de pasos para dibujar la circunferencia
+	cbnz x10, loop7 // Reviso si ya hice todas las lineas
+	
+
+	mov x1, #160 // Asigno a x1 las coordenadas en X de donde comienzo a dibujar la nave
+	mov x2, #256 // Asigno a x2 las coordenadas en Y de donde comienzo a dibujar la nave
+	mov x3, #320 // Asigno a x3 la cantidad de pixeles que va a tener la parte más amplia de la nave
+	mov x10, #40 // Asigno a x10 la mitad de la cantidad de pixeles que va a tener de altura la nave
+	ldr x11, =CUPULA_PIXELES_ABAJO // Guardo en x11 la dirección de los pasos para dibujar la circunferencia
+
+	loop8: // Inicio el bucle para pintar la parte de arriba de la base de la nave
+	ldur x12, [x11, #0] // Guardo en x12 el elemento del arreglo que corresponde
+	bl pintar_linea_horizontal // Llamada a la función para pintar la linea
+	add x1, x1, x12 // Agrego a la coordenada en X donde dibujo la linea la cantidad que diga segun los pasos para dibujar la circunferencia
+	add x2, x2, #1  // Bajo una coordenada en Y
+	lsl x12, x12, #1 // Calculo auxiliar para la próxima linea
+	sub x3, x3, x12 // Resto a x3 2 veces lo sumado a x1, para que me quede centrado (el punto más a la izquierda de la linea se corre hacia la derecha "z" pixeles y yo achico la cantidad de pixeles de la linea "2*z")
+
+	sub x10, x10, #1 // Resto 1 a la cantidad de lineas que tengo que hacer
+	add x11, x11 , #8 // Paso al siguiente elemento del arreglo de pasos para dibujar la circunferencia
+	cbnz x10, loop8 // Reviso si ya hice todas las lineas
 
 
 	ldur x1, [sp] // POP
