@@ -29,7 +29,6 @@ main:
 	mov x21, SCREEN_HEIGH // Guardar alto de la pantalla (cant pixeles) en x21
 	mov x22, SCREEN_WIDTH // Guardar largo de la pantalla (cant pixeles) en x22
 	mov x23, COLOR_FONDO // Guardar el color del fondo en x23
-	mov x24, ITERACIONES_INACTIVAS_PLANETA
 
 	bl pintar_fondo 	// Establecer el color del fondo al indicado
 
