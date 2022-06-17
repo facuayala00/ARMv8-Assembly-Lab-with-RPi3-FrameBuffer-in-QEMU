@@ -11,10 +11,6 @@ TAM_ESTRELLAS1: .dword 4,4,3,3,3,3,4,3,4,3,4,4,4,4,3,4
 UBIC_ESTRELLASX2: .dword 493,277,607,85,200,139,320,65,635,375,23,484,566,369,169,247 // Posiciones iniciales en X de las estrellas grises
 UBIC_ESTRELLASY2: .dword 422,227,19,323,449,131,180,144,348,63,45,41,233,308,360,53 // Posiciones iniciales en Y de las estrellas grises
 TAM_ESTRELLAS2: .dword 2,2,2,1,3,3,1,1,2,3,2,1,3,2,1,2
-UBIC_PLANETASX: .dword 348,227,108,558,482,43,625,535 // Posiciones iniciales en X de las estrellas grises
-UBIC_PLANETASY: .dword 408,75,230,175,279,59,378,264 // Posiciones iniciales en Y de las estrellas grises
-TAM_PLANETAS: .dword 9,12,9,11,8,10,12,11,8,11,8,10,9,9,12,9
-COLOR_PLANETAS: .dword 0xD51313, 0x883EF3, 0xF38B3E, 0x00AF64, 0xFFFF00, 0xA98307, 0x79553D, 0x1E2460
 UBIC_LUZ_X:	.dword 114, 507, 309, 159, 460, 206, 413, 258, 361
 UBIC_LUZ_Y: .dword 286, 286, 336, 310, 310, 323, 323, 333, 333
 
@@ -56,23 +52,13 @@ main:
 
 
 	pintar_estrellas_blancas:
-	cbnz x17, saltoo
+	cbnz x17, pintar_luces_nave
 	mov x0, #0xFFFFFF // Establezco el color en el que va a pintar las estrellas
 	ldr x4, =UBIC_ESTRELLASX1 // Establezco que coordenadas en X va a utilizar para pintar las estrellas
 	ldr x5, =UBIC_ESTRELLASY1 // Establezco que coordenadas en Y va a utilizar para pintar las estrellas
 	ldr x6, =TAM_ESTRELLAS1
 	bl pintar_estrellas // Pinto las estrellas
 	mov x17, #2
-
-
-	// Pintar planetas/mover el planeta en cuestión
-	saltoo:
-	ldr x4, =UBIC_PLANETASX // Establezco que coordenadas en X va a utilizar para pintar las estrellas
-	ldr x5, =UBIC_PLANETASY // Establezco que coordenadas en Y va a utilizar para pintar las estrellas
-	ldr x6, =TAM_PLANETAS
-	ldr x26, =COLOR_PLANETAS
-	bl pintar_planetas
-    // Escribo el indice de cuantos frame faltan para poder pintar/mover de vuelta el planeta
 
 	pintar_luces_nave:
 	ldr x4, =UBIC_LUZ_X // Establezco que coordenadas en X va a utilizar para pintar las estrellas
@@ -238,37 +224,6 @@ pintar_linea_dependiendo_del_color_del_pixel:
 	ldur x9, [sp, #24]
 	add sp,sp, #32 // POP
 	br lr // Salida de la función
-
-
-
-	// PINTAR CUADRADO
-	// -------------------------------
-	// Argumentos:
-	// 	X0 - color que se utilizará para pintar
-	// 	X1 - posición vertical (eje x) del pixel inicial. Posiciones validas [0-479]
-	// 	X2 - posición horizontal (eje y) del pixel inicial. Posiciones validas [0-639]
-	// 	X3 - largo del lado del cuadrado
-pintar_cuadrado:
-	sub sp, sp, #32 // PUSH
-	stur lr, [sp, #24] // PUSH
-	stur x3, [sp, #16] // PUSH
-	stur x2, [sp, #8] // PUSH	
-	stur x1, [sp] // PUSH
-
-	add x10, xzr, x3 // Establezco x10 como la cantidad de lineas que debo hacer (por ejemplo, si "x10 = 5" hago 5 lineas horizontales (una debajo de la otra) de 5 pixeles)
-	loop: // Inicio del loop
-	bl pintar_linea_horizontal // Llamo a pintar linea horizontal con el color x0, altura en X x1 y altura en Y x2
-	sub x2, x2, #1 // Bajo una linea para que la próxima llamada se pinte la linea de abajo
-	sub x10, x10, #1 // Disminuyo en 1 la cantidad de pixeles que debo pintar
-	cbnz x10, loop // Reviso si todavía tengo que pintar pixeles para decidir si seguir pintando o no
-
-	ldur x1, [sp] // POP
-	ldur x2, [sp, #8] // POP
-	ldur x3, [sp, #16] // POP
-	ldur lr, [sp, #24] // POP
-	add sp,sp, #32 // POP
-	br lr // Salida de la función	
-
 
 	// ESTRELLA
 	// -------------------------------
@@ -786,75 +741,6 @@ linea_from_array:
   ldur lr, [sp, #8 ] // POP
   add sp, sp, 	#16 // POP
   br lr
-
-
-
-pintar_planetas:
-	sub sp, sp, #32 // PUSH
-	stur lr, [sp, #24] // PUSH
-	stur x3, [sp, #16] // PUSH
-	stur x2, [sp, #8] // PUSH	
-	stur x1, [sp] // PUSH
-	
-	mov x14, #8 // Contador de cantidad de estrellas que debo pintar
-	loop31: // Inicio del loop
-	ldur x1, [x4, #0] // Asigno en x1 la dirección en X de la estrella que debo pintar
-	ldur x2, [x5, #0] // Asigno en x2 la dirección en Y de la estrella que debo pintar
-	ldur x3, [x6, #0] // Asigno en x3 el tamaño de la estrella que debo pintar
-	ldur x25, [x26, #0]
-	mov x0, x25
-	// Despinto la estrella anterior
-	add x7, xzr, x0
-	mov x0, #0x33
-	bl estrella
-
-	// Pinto la nueva estrella
-	add x0, xzr, x7
-	mov x7, #0x33
-	sub x1, x1, #1 // Resto uno a x1 para desplazar hacia la izquierda la posición de la estrella
-	bl estrella
-	
-	// Si x1 es 4, le asigno a x1 (X) 480 para que vuelva a dar la vuelta y le asigno a x2 (Y) un número pseudoaleatorio entre 0 y 639 para que las estrellas no sean repetitivas
-	cmp x1, #6 
-	b.ne else11 // Reviso si x1 es diferente de 2 para saltearme todas las siguientes lineas
-
-	add x1, xzr, x22 //guardo en x1 el 480
- 	mov x16, #73 // Guardo el número 73 en x16 (elegido arbitrariamente por ser número de Sheldon)
-	madd x16, x2, x16, x7 // Calculo random para obtener algo pseudoaleatorio
-	udiv x2, x16, x21 // Divido x16 por 640 (División entera) y lo guardo en x2
-	mul x2, x2, x21 // Multiplico la división anterior por 640  
-	sub x2, x16, x2 // Guardo en x2 el modulo 640 del número pseudo aleatorio (Número - [Número div 640] * 640)
-	stur x2, [x5] // Guardo el valor de x2 en el elemento correspondiente del arreglo
-
-	mov x2, #0xFFFFFF
- 	mov x16, #73 // Guardo el número 73 en x16 (elegido arbitrariamente por ser número de Sheldon)
-	madd x16, x25, x16, x7 // Calculo random para obtener algo pseudoaleatorio
-	udiv x25, x16, x2 // Divido x16 por #0xFFFFFF (División entera) y lo guardo en x25
-	mul x25, x2, x25 // Multiplico la división anterior por #0xFFFFFF 
-	sub x25, x16, x25 // Guardo en x25 el modulo #0xFFFFFF del número pseudo aleatorio (Número - [Número div #0xFFFFFF] * #0xFFFFFF)
-	stur x25, [x26] // Guardo el valor de x2 en el elemento correspondiente del arreglo
-
-
-
-	else11:
-	stur x1, [x4] // Guardo el valor de x1 en el elemento correspondiente del arreglo
-
-	add x4, x4, #8 // Paso al siguiente elemento del arreglo de coordenadas en X
-	add x5, x5, #8 // Paso al siguiente elemento del arreglo de coordenadas en Y
-	add x6, x6, #8 // Paso al siguiente elemento del arreglo de coordenadas en Y	
-	add x26, x26, #8
-	sub x14, x14, #1 // Resto uno a la cantidad de estrellas que me faltan pintar
-	cbnz x14, loop31 // Reviso si me faltan pintar estrellas todavia
-
-
-	ldur x1, [sp] // POP
-	ldur x2, [sp, #8] // POP
-	ldur x3, [sp, #16] // POP
-	ldur lr, [sp, #24] // POP
-	add sp,sp, #32 // POP
-	br lr // Salida de la función	
-
-
 
 fin:	
 	b fin
