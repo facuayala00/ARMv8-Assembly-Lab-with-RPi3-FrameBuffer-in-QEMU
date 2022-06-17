@@ -614,7 +614,6 @@ pintar_luz_nave:
 	ldr x11,=LUZ_PIXELES // Guardo en x11 la dirección de los pasos para dibujar las luces
 	mov x13, #0
 
-
 	loop9: // Inicio el bucle para pintar la parte de abajo de la base de la luz
 	ldur x12, [x11, #0] // Guardo en x12 el elemento del arreglo que corresponde
 	movz x0, 0x3B42
