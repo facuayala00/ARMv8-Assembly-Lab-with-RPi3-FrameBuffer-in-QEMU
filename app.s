@@ -547,7 +547,7 @@ pintar_luz_nave:
 	add sp,sp, #32 // POP
 	br lr
 
-	// PINTAR FORMA COMPLEJA
+	// DIBUJAR FORMA COMPLEJA
 	// -------------------------------
 	// Argumentos:
 	// 	X0 - color que se utilizará para pintar las estrellas
@@ -556,7 +556,7 @@ pintar_luz_nave:
 	//	X4 - dirección del array
 	// 	X5 - tamaño maximo en Y
 
-pintar_forma_compleja:
+dibujar_forma_compleja:
   sub sp, sp, 	#40 // PUSH
   stur lr, [sp, #32 ] // PUSH
   stur x6, [sp, #24 ] // PUSH
@@ -585,6 +585,7 @@ pintar_forma_compleja:
 
   cbnz x5, aff_downto_x5		  // while x5 != 0
 
+  aff_end:
   ldur x2, [sp] // POP
   ldur x4, [sp, #8 ] // POP
   ldur x5, [sp, #16  ] // POP	
@@ -618,7 +619,7 @@ linea_from_array:
       stur w0, [x11]                          		// 	     Pinto el pixel
       add x11, x11, #4                        		// 	     Guardo en x11 la próxima dirección a pintar
       sub x9, x9, #1                          		// 	     Resto uno a la cantidad de pixeles que debo pintar
-      cbz x9, linea_from_array_pintar_pixel   		// 	   while x9 != 0
+      cbnz x9, linea_from_array_pintar_pixel   		// 	   while x9 != 0
       mov x12, #0 			      		//     pintar=false
       B linea_from_array_calcular_siguiente_direccion
 
