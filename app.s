@@ -9,13 +9,10 @@ UBIC_ESTRELLASX1: .dword 472,519,411,627,286,315,170,21,69,600,159,108,350,218,4
 UBIC_ESTRELLASY1: .dword 222,550,303,75,237,100,189,53,391,303,600,13,517,420,586,634 // Posiciones iniciales en Y de las estrellas blancas
 UBIC_ESTRELLASX2: .dword 493,277,607,85,200,139,320,65,635,375,23,484,566,369,169,247 // Posiciones iniciales en X de las estrellas grises
 UBIC_ESTRELLASY2: .dword 422,227,19,323,449,131,180,144,348,63,45,41,233,308,360,53 // Posiciones iniciales en Y de las estrellas grises
-UBIC_PLANETA: .dword 
 
 BASE_PIXELES: .dword 0,0,0,0,1,0,0,1,0,0,1,1,0,1,1,0,1,1,1,1,1,1,1,2,1,1,2,1,2,1,2,2,2,2,3,2,3,3,3,4,3,4,3,4,5,4,5,5,6,6,7,7,7,8,9,10,13,15,19 // Secuencia de números útilizada para graficar el semicirculo correspondiente a la base de la nave
 CUPULA_PIXELES_ARRIBA: .dword 0,0,0,0,1,0,0,1,0,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,2,1,1,2,1,1,2,1,1,2,1,2,1,2,2,2,2,2,2,2,3,3,3,3,3,4,4,4,5,6,6,7,11,13,17
 CUPULA_PIXELES_ABAJO: .dword 0,0,0,0,1,0,0,1,1,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,4,4,4,5,5,6,6,7,7,9,11,13,17
-PLANETA: .dword 0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,1,0,0,1,0,1,1,0,1,0,1,1,1,1,0,1,1,1,1,2,1,1,1,2,1,2,2,2,2,3,4,5
-
 
 .text
 
@@ -32,9 +29,6 @@ main:
  	bl base_nave // Imprimir la base de la nave
 	bl cupula_nave // Imprimir cupula de la nave
 
-	/*mov x1, #400
-	mov x2, #50
-	bl pintar_planeta*/
 	// Ahora inicia un loop que está constantemente corriendo las estrellas hacia un costado (Hace 3 ciclos de estrellas blancas y 1 de estrellas grises "por vuelta")
  	pintar_estrellas_grises: 
 	movz x0, #0x7D7D
@@ -229,72 +223,6 @@ estrella:
 	cbnz x13,loop2 // Reviso si todavía tengo que pintar lineas para decidir si seguir pintando o no
 
 	br lr // Salida de la función	
-
-	// PLANETA
-	// -------------------------------
-	// Explicación:
-	// 	Pinta todos los pixeles de un circulo (hardcodeado) que cumplan la condición de que son igual a un color
-	// Argumentos:
-	// 	X0 - color que se utilizará para pintar
-	// 	X1 - posición vertical (eje x) del pixel inicial. Posiciones validas [0-479]
-	// 	X2 - posición horizontal (eje y) del pixel inicial. Posiciones validas [0-639]
-	// 	x7 - color necesario para sobrepintar ese pixel
-pintar_planeta:
-	sub sp, sp, #32 // PUSH
-	stur lr, [sp, #24] // PUSH
-	stur x3, [sp, #16] // PUSH
-	stur x2, [sp, #8] // PUSH	
-	stur x1, [sp] // PUSH	
-
-	movz x0, 0xCAFE
-
-
-	mov x3, #100 // Asigno a x3 la cantidad de pixeles que va a tener la parte más ancha del planeta
-	mov x10, #50 // Asigno a x10 la mitad de la cantidad de pixeles que va a tener de altura el planeta
-	ldr x11, =PLANETA // Guardo en x11 la dirección de los pasos para dibujar la circunferencia
-
-
-	loop9: // Inicio el bucle para pintar la parte de abajo del planeta
-	ldur x12, [x11, #0] // Guardo en x12 el elemento del arreglo que corresponde
-	bl pintar_linea_horizontal // Llamada a la función para pintar la linea
-	add x1, x1, x12 // Agrego a la coordenada en X donde dibujo la linea la cantidad que diga segun los pasos para dibujar la circunferencia
-	sub x2, x2, #1  // Bajo una coordenada en Y
-	lsl x12, x12, #1 // Calculo auxiliar para la próxima linea
-	sub x3, x3, x12 // Resto a x3 2 veces lo sumado a x1, para que me quede centrado (el punto más a la izquierda de la linea se corre hacia la derecha "z" pixeles y yo achico la cantidad de pixeles de la linea "2*z")
-
-	sub x10, x10, #1 // Resto 1 a la cantidad de lineas que tengo que hacer
-	add x11, x11 , #8 // Paso al siguiente elemento del arreglo de pasos para dibujar la circunferencia
-	cbnz x10, loop9 // Reviso si ya hice todas las lineas
-
-
-	ldur x1, [sp] // Posición inicial en X
-	ldur x2, [sp, #8] // Posición inicial en Y
-	mov x3, #100 // Asigno a x3 la cantidad de pixeles que va a tener la parte más ancha del planeta
-	mov x10, #50 // Asigno a x10 la mitad de la cantidad de pixeles que va a tener de altura el planeta
-	ldr x11, =PLANETA // Guardo en x11 la dirección de los pasos para dibujar la circunferencia
-
-
-	loop10: // Inicio el bucle para pintar la parte de abajo del planeta
-	ldur x12, [x11, #0] // Guardo en x12 el elemento del arreglo que corresponde
-	bl pintar_linea_horizontal // Llamada a la función para pintar la linea
-	add x1, x1, x12 // Agrego a la coordenada en X donde dibujo la linea la cantidad que diga segun los pasos para dibujar la circunferencia
-	add x2, x2, #1  // Subo una coordenada en Y
-	lsl x12, x12, #1 // Calculo auxiliar para la próxima linea
-	sub x3, x3, x12 // Resto a x3 2 veces lo sumado a x1, para que me quede centrado (el punto más a la izquierda de la linea se corre hacia la derecha "z" pixeles y yo achico la cantidad de pixeles de la linea "2*z")
-
-	sub x10, x10, #1 // Resto 1 a la cantidad de lineas que tengo que hacer
-	add x11, x11 , #8 // Paso al siguiente elemento del arreglo de pasos para dibujar la circunferencia
-	cbnz x10, loop10 // Reviso si ya hice todas las lineas
-
-
-
-	ldur x1, [sp] // POP
-	ldur x2, [sp, #8] // POP
-	ldur x3, [sp, #16] // POP
-	ldur lr, [sp, #24] // POP
-	add sp,sp, #32 // POP
-	br lr // Salida de la función	
-
 
 	// PINTAR ESTRELLAS
 	// -------------------------------
