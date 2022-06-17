@@ -18,6 +18,7 @@ BASE_PIXELES: .dword 0,0,0,0,1,0,0,1,0,0,1,1,0,1,1,0,1,1,1,1,1,1,1,2,1,1,2,1,2,1
 CUPULA_PIXELES_ARRIBA: .dword 0,0,0,0,1,0,0,1,0,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,2,1,1,2,1,1,2,1,1,2,1,2,1,2,2,2,2,2,2,2,3,3,3,3,3,4,4,4,5,6,6,7,11,13,17
 CUPULA_PIXELES_ABAJO: .dword 0,0,0,0,1,0,0,1,1,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,4,4,4,5,5,6,6,7,7,9,11,13,17
 LUZ_PIXELES: .dword 0,1,0,1,0,1,1,2,2,3
+MARCIANITO_PIXELES: .dword -1,7,13,87,-1,6,0,75,12,13,-1,12,0,100,-1,7,0,26,49,25,-1,6,0,26,-1,6,0,50,-1,6,0,62,-1,6,0,100,-1,6,0,75,12,13,-1,12,0,75,-1,6,0,26,12,12,12,12,-1,7,0,26,36,25,-1,7,0,38,24,38,-1
 
 .text
 
@@ -36,6 +37,7 @@ main:
 
 
 	bl luces_nave
+	bl marcianito
 
 	// Ahora inicia un loop que está constantemente corriendo las estrellas hacia un costado
 	nuevo_frame:
@@ -740,6 +742,22 @@ linea_from_array:
   ldur x6, [sp, #0 ] // POP
   ldur lr, [sp, #8 ] // POP
   add sp, sp, 	#16 // POP
+  br lr
+
+marcianito:
+  sub sp, sp, #8 // PUSH
+  stur lr, [sp, #0] // PUSH
+
+  movz x0, #0x3220, lsl 0
+  movk x0, #0x01, lsl 16
+  mov x1, #270
+  mov x2, #193
+  ldr x4, =MARCIANITO_PIXELES
+  mov x5, #94
+  bl dibujar_forma_compleja
+
+  ldur lr, [sp, #0] // POP
+  add sp, sp, #8 // POP
   br lr
 
 fin:	
