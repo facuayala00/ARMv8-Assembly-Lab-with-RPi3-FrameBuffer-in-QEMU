@@ -5,10 +5,10 @@
 .equ RETARDO, 0xFFFFF // Retardo utilizado para que el movimiento de estrellas sea más lento (Modificar en caso de ser necesario)
 .equ COLOR_FONDO, 0x33
 .data
-UBIC_ESTRELLASX1: .dword 472,19,411,627,286,215,35,21,69,83,159,108,190,218,48,440 // Posiciones iniciales en X de las estrellas blancas
-UBIC_ESTRELLASY1: .dword 222,140,303,75,237,262,189,53,391,303,2,13,517,420,586,634 // Posiciones iniciales en Y de las estrellas blancas
-UBIC_ESTRELLASX2: .dword 493,277,607,85,460,139,59,65,410,375,23,484,566,369,466,611 // Posiciones iniciales en X de las estrellas grises
-UBIC_ESTRELLASY2: .dword 422,227,19,129,449,131,387,144,348,63,45,41,233,308,93,53 // Posiciones iniciales en Y de las estrellas grises
+UBIC_ESTRELLASX1: .dword 472,519,411,627,286,315,170,21,69,600,159,108,350,218,48,440 // Posiciones iniciales en X de las estrellas blancas
+UBIC_ESTRELLASY1: .dword 222,550,303,75,237,100,189,53,391,303,600,13,517,420,586,634 // Posiciones iniciales en Y de las estrellas blancas
+UBIC_ESTRELLASX2: .dword 493,277,607,85,200,139,320,65,635,375,23,484,566,369,169,247 // Posiciones iniciales en X de las estrellas grises
+UBIC_ESTRELLASY2: .dword 422,227,19,323,449,131,180,144,348,63,45,41,233,308,360,53 // Posiciones iniciales en Y de las estrellas grises
 BASE_PIXELES: .dword 0,0,0,0,1,0,0,1,0,0,1,1,0,1,1,0,1,1,1,1,1,1,1,2,1,1,2,1,2,1,2,2,2,2,3,2,3,3,3,4,3,4,3,4,5,4,5,5,6,6,7,7,7,8,9,10,13,15,19 // Secuencia de números útilizada para graficar el semicirculo correspondiente a la base de la nave
 CUPULA_PIXELES_ARRIBA: .dword 0,0,0,0,1,0,0,1,0,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,2,1,1,2,1,1,2,1,1,2,1,2,1,2,2,2,2,2,2,2,3,3,3,3,3,4,4,4,5,6,6,7,11,13,17
 CUPULA_PIXELES_ABAJO: .dword 0,0,0,0,1,0,0,1,1,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,4,4,4,5,5,6,6,7,7,9,11,13,17
@@ -256,13 +256,20 @@ pintar_estrellas:
 	sub x1, x1, #1 // Resto uno a x1 para desplazar hacia la izquierda la posición de la estrella
 	bl estrella
 	
-	// Si x1 es 0, le asigno 640 para que siga funcionando bien las estrellas y no se vayan para arriba
-	cbz x1, else1
-	b else2
-	else1: 
-	add x1, xzr, x22
-	else2:
-	stur x1, [x4,#0]
+	// Si x1 es 2, le asigno a x1 (X) 480 para que vuelva a dar la vuelta y le asigno a x2 (Y) un número pseudoaleatorio entre 0 y 639 para que las estrellas no sean repetitivas
+	cmp x1, #2 
+	b.ne else1 // Reviso si x1 es diferente de 2 para saltearme todas las siguientes lineas
+
+	add x1, xzr, x22 //guardo en x1 el 480
+ 	mov x16, #73 // Guardo el número 73 en x16 (elegido arbitrariamente por ser número de Sheldon)
+	madd x16, x2, x16, x7 // Calculo random para obtener algo pseudoaleatorio
+	udiv x2, x16, x21 // Divido x16 por 640 (División entera) y lo guardo en x2
+	mul x2, x2, x21 // Multiplico la división anterior por 640  
+	sub x2, x16, x2 // Guardo en x2 el modulo 640 del número pseudo aleatorio (Número - [Número div 640] * 640)
+	stur x2, [x5] // Guardo el valor de x2 en el elemento correspondiente del arreglo
+
+	else1:
+	stur x1, [x4] // Guardo el valor de x1 en el elemento correspondiente del arreglo
 
 	add x4, x4, #8 // Paso al siguiente elemento del arreglo de coordenadas en X
 	add x5, x5, #8 // Paso al siguiente elemento del arreglo de coordenadas en Y
@@ -284,7 +291,7 @@ pintar_estrellas:
 	// 	Hace una columna del color del fondo a la derecha para evitar uno errores graficos
 arreglar_bug:
 	mov x11, COLOR_FONDO
-	mov x1, #636 // Dirección inicial del bug en Y
+	mov x1, #638 // Dirección inicial del bug en Y
 	mov x2, #0 // Dirección inicial del bug en X
 	madd x10, x2, x22, x1 // x + (y * 640)
 	add x10, x20, x10, lsl 2 // Dirección de inicio + 4 * [x + (y * 640)]
