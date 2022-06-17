@@ -7,6 +7,7 @@
 .data
 UBIC_ESTRELLASX1: .dword 472,519,411,627,286,315,170,21,69,600,159,108,350,218,48,440 // Posiciones iniciales en X de las estrellas blancas
 UBIC_ESTRELLASY1: .dword 222,550,303,75,237,100,189,53,391,303,600,13,517,420,586,634 // Posiciones iniciales en Y de las estrellas blancas
+TAM_ESTRELLAS1: .dword 5,7,8,5,8,4,6,7,4,7,7,5,6,4,8,6
 UBIC_ESTRELLASX2: .dword 493,277,607,85,200,139,320,65,635,375,23,484,566,369,169,247 // Posiciones iniciales en X de las estrellas grises
 UBIC_ESTRELLASY2: .dword 422,227,19,323,449,131,180,144,348,63,45,41,233,308,360,53 // Posiciones iniciales en Y de las estrellas grises
 
@@ -32,34 +33,42 @@ main:
  	bl base_nave // Imprimir la base de la nave
 	bl cupula_nave // Imprimir cupula de la nave
 
+
 	bl luces_nave
 
+	// Ahora inicia un loop que está constantemente corriendo las estrellas hacia un costado
+	nuevo_frame:
 
-	// Ahora inicia un loop que está constantemente corriendo las estrellas hacia un costado (Hace 3 ciclos de estrellas blancas y 1 de estrellas grises "por vuelta")
- 	pintar_estrellas_grises: 
+	cbnz x15, pintar_estrellas_blancas // Si el indice de cuando toca hacer mover las estrellas grises no es 0, salteo el pintar las estrellas grises
+	pintar_estrellas_grises: 
 	movz x0, #0x7D7D
 	movk x0, #0x007B, lsl 16 // Establezco el color en el que va a pintar las estrellas
 	ldr x4, =UBIC_ESTRELLASX2 // Establezco que coordenadas en X va a utilizar para pintar las estrellas
 	ldr x5, =UBIC_ESTRELLASY2 // Establezco que coordenadas en Y va a utilizar para pintar las estrellas
+	ldr x6, =TAM_ESTRELLAS2
 	bl pintar_estrellas // Pinto las estrellas
+	mov x15, #3 // Escribo el indice de cuantos frame faltan para poder pintar de vuelta estrellas_grises
 
-	mov x15, #3 // Escribo el indice de cuantos movimientos de estrellas blancas faltan
+
 	pintar_estrellas_blancas:
 	mov x0, #0xFFFFFF // Establezco el color en el que va a pintar las estrellas
 	ldr x4, =UBIC_ESTRELLASX1 // Establezco que coordenadas en X va a utilizar para pintar las estrellas
 	ldr x5, =UBIC_ESTRELLASY1 // Establezco que coordenadas en Y va a utilizar para pintar las estrellas
+	ldr x6, =TAM_ESTRELLAS1
 	bl pintar_estrellas // Pinto las estrellas
 	bl arreglar_bug // Arreglo un bug gráfico en uno de los bordes
 	mov x9, RETARDO // Guardo en x9 el valor del retardo
+	
+
 	// Bucle de retardo
 	pausa:
 	sub x9, x9, #1 
 	cbnz x9, pausa
-		
-	sub x15, x15, #1 // Resto un movimiento de estrellas blancas
-	cbnz x15, pintar_estrellas_blancas // Reviso si ya complete los 3 movimientos de estrellas blancas, para si no hacer el próximo
+	
+	sub x17, x17, #1 // Resto un frame al indice para hacer movimiento de planetas
+	sub x15, x15, #1 // Resto un frame al indice para hacer movimiento de estrellas grises
 
-	b pintar_estrellas_grises // Vuelvo a comenzar el ciclo de movimiento de estrellas 
+	b nuevo_frame // Vuelvo a comenzar el ciclo del frame
 
 	b fin
 
@@ -94,7 +103,8 @@ pintar_fondo:
 	// 	X2 - posición horizontal (eje y) del pixel inicial. Posiciones validas [0-639]
 	// 	X3 - cantidad de pixeles que se van a pintar. Mínimo 1
 pintar_linea_horizontal:
-	sub sp, sp, #24 // PUSH
+	sub sp, sp, #32 // PUSH
+	stur x9, [sp, #24] //PUSH
 	stur lr, [sp, #16] // PUSH
 	stur x3, [sp, #8] // PUSH
 	stur x1, [sp] // PUSH
@@ -113,7 +123,8 @@ pintar_linea_horizontal:
 	ldur x1, [sp] // POP
 	ldur x3, [sp, #8] // POP
 	ldur lr, [sp, #16] // POP
-	add sp,sp, #24 // POP
+	ldur x9, [sp, #24]
+	add sp,sp, #32 // POP
 	br lr // Salida de la función
 
 	// PINTAR LINEA DEPENDIENDO DEL COLOR DEL PIXEL
@@ -126,7 +137,8 @@ pintar_linea_horizontal:
 	//	X4 - Color secundario que se utiliza si el pixel es de color X5
 	//	X5 - Color de pixel a chequear
 pintar_linea_dependiendo_del_color_del_pixel:
-	sub sp, sp, #24 // PUSH
+	sub sp, sp, #32 // PUSH
+	stur x9, [sp, #24] //PUSH
 	stur lr, [sp, #16] // PUSH
 	stur x3, [sp, #8] // PUSH
 	stur x1, [sp] // PUSH
@@ -157,7 +169,8 @@ pintar_linea_dependiendo_del_color_del_pixel:
 	ldur x1, [sp] // POP
 	ldur x3, [sp, #8] // POP
 	ldur lr, [sp, #16] // POP
-	add sp,sp, #24 // POP
+	ldur x9, [sp, #24]
+	add sp,sp, #32 // POP
 	br lr // Salida de la función
 
 
@@ -199,6 +212,7 @@ pintar_cuadrado:
 	// 	X0 - color que se utilizará para pintar
 	// 	X1 - posición vertical (eje x) del pixel inicial. Posiciones validas [0-479]
 	// 	X2 - posición horizontal (eje y) del pixel inicial. Posiciones validas [0-639]
+	// 	X3 - tamaño de la estrella
 	// 	x7 - color necesario para sobrepintar ese pixel
 estrella:
 	// Calculo el indice de la primera dirección donde debo pintar
@@ -206,13 +220,13 @@ estrella:
 	add x9, x20, x9, lsl 2 // Dirección de inicio + 4 * [x + (y * 640)]
 
 	// Guardo en x10 cuanto debo saltar para llegar a la primera posición de la próxima linea
-	mov x10, #636
+	sub x10, x22, x3
 	lsl x10, x10, #2
 
-	mov x13, #4 // Guardo en x13 el indice de cuantas lineas debo pintar
+	mov x13, x3 // Guardo en x13 el indice de cuantas lineas debo pintar
 	loop2:
 	add x9, x9, x10 // Le sumo a x9 lo necesario para que ahora apunte al primer pixel de la próxima linea
-	mov x12, #4 // Guardo en x12 el indice de cuantos pixeles debo pintar en esta linea
+	mov x12, x3 // Guardo en x12 el indice de cuantos pixeles debo pintar en esta linea
 	
 	pintar_pixel3: // Inicio el loop
 	ldur w11, [x9] // Guardo en x11 el color del pixel que quiero pintar
@@ -248,6 +262,7 @@ pintar_estrellas:
 	loop3: // Inicio del loop
 	ldur x1, [x4, #0] // Asigno en x1 la dirección en X de la estrella que debo pintar
 	ldur x2, [x5, #0] // Asigno en x2 la dirección en Y de la estrella que debo pintar
+	ldur x3, [x6, #0] // Asigno en x2 la dirección en Y de la estrella que debo pintar
 
 	// Despinto la estrella anterior
 	add x7, xzr, x0
@@ -261,7 +276,7 @@ pintar_estrellas:
 	bl estrella
 	
 	// Si x1 es 2, le asigno a x1 (X) 480 para que vuelva a dar la vuelta y le asigno a x2 (Y) un número pseudoaleatorio entre 0 y 639 para que las estrellas no sean repetitivas
-	cmp x1, #2 
+	cmp x1, #4 
 	b.ne else1 // Reviso si x1 es diferente de 2 para saltearme todas las siguientes lineas
 
 	add x1, xzr, x22 //guardo en x1 el 480
@@ -277,6 +292,7 @@ pintar_estrellas:
 
 	add x4, x4, #8 // Paso al siguiente elemento del arreglo de coordenadas en X
 	add x5, x5, #8 // Paso al siguiente elemento del arreglo de coordenadas en Y
+	add x6, x6, #8 // Paso al siguiente elemento del arreglo de coordenadas en Y	
 	sub x14, x14, #1 // Resto uno a la cantidad de estrellas que me faltan pintar
 	cbnz x14, loop3 // Reviso si me faltan pintar estrellas todavia
 
@@ -289,13 +305,13 @@ pintar_estrellas:
 	br lr // Salida de la función		
 
 
-	// ESTRELLA
+	// ARREGLAR BUG
 	// -------------------------------
 	// Explicación:
 	// 	Hace una columna del color del fondo a la derecha para evitar uno errores graficos
 arreglar_bug:
 	mov x11, COLOR_FONDO
-	mov x1, #638 // Dirección inicial del bug en Y
+	mov x1, #636 // Dirección inicial del bug en Y
 	mov x2, #0 // Dirección inicial del bug en X
 	madd x10, x2, x22, x1 // x + (y * 640)
 	add x10, x20, x10, lsl 2 // Dirección de inicio + 4 * [x + (y * 640)]
@@ -305,6 +321,10 @@ arreglar_bug:
 	stur w11, [x10, #4]
 	stur w11, [x10, #8]
 	stur w11, [x10, #12]
+	stur w11, [x10, #16]
+	stur w11, [x10, #20]
+	stur w11, [x10, #24]
+	stur w11, [x10, #28]
 	add x10, x10, #2560 // Sumo a x10 lo que necesita para llegar a la siguiente linea
 	sub x12, x12, #1 // Resto 1 a la cantidad de lineas que me quedan por pintar
 	cbnz x12, loop4 // Reviso si me quedan lineas por pintar
