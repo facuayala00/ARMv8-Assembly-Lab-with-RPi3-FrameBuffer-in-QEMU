@@ -10,15 +10,10 @@ UBIC_ESTRELLASY1: .dword 222,550,303,75,237,100,189,53,391,303,600,13,517,420,58
 TAM_ESTRELLAS1: .dword 5,7,8,5,8,4,6,7,4,7,7,5,6,4,8,6
 UBIC_ESTRELLASX2: .dword 493,277,607,85,200,139,320,65,635,375,23,484,566,369,169,247 // Posiciones iniciales en X de las estrellas grises
 UBIC_ESTRELLASY2: .dword 422,227,19,323,449,131,180,144,348,63,45,41,233,308,360,53 // Posiciones iniciales en Y de las estrellas grises
-TAM_ESTRELLAS2: .dword 5,3,2,4,6,1,4,2,3,6,1,5,2,5,2,3
-UBIC_PLANETA: .dword 620, 80, 0
-ITERACIONES_INACTIVAS_PLANETA: .dword 0xFFFF
 
 BASE_PIXELES: .dword 0,0,0,0,1,0,0,1,0,0,1,1,0,1,1,0,1,1,1,1,1,1,1,2,1,1,2,1,2,1,2,2,2,2,3,2,3,3,3,4,3,4,3,4,5,4,5,5,6,6,7,7,7,8,9,10,13,15,19 // Secuencia de números útilizada para graficar el semicirculo correspondiente a la base de la nave
 CUPULA_PIXELES_ARRIBA: .dword 0,0,0,0,1,0,0,1,0,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,2,1,1,2,1,1,2,1,1,2,1,2,1,2,2,2,2,2,2,2,3,3,3,3,3,4,4,4,5,6,6,7,11,13,17
 CUPULA_PIXELES_ABAJO: .dword 0,0,0,0,1,0,0,1,1,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,4,4,4,5,5,6,6,7,7,9,11,13,17
-PLANETA: .dword 0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,1,0,0,1,0,1,1,0,1,0,1,1,1,1,0,1,1,1,1,2,1,1,1,2,1,2,2,2,2,3,4,5
-
 
 .text
 
@@ -41,6 +36,7 @@ main:
 
 	cbnz x15, pintar_estrellas_blancas // Si el indice de cuando toca hacer mover las estrellas grises no es 0, salteo el pintar las estrellas grises
 	pintar_estrellas_grises: 
+
 	movz x0, #0x7D7D
 	movk x0, #0x007B, lsl 16 // Establezco el color en el que va a pintar las estrellas
 	ldr x4, =UBIC_ESTRELLASX2 // Establezco que coordenadas en X va a utilizar para pintar las estrellas
@@ -242,7 +238,6 @@ estrella:
 	cbnz x13,loop2 // Reviso si todavía tengo que pintar lineas para decidir si seguir pintando o no
 
 	br lr // Salida de la función	
-
 
 	// PINTAR ESTRELLAS
 	// -------------------------------
