@@ -11,6 +11,7 @@ TAM_ESTRELLAS1: .dword 5,7,8,5,8,4,6,7,4,7,7,5,6,4,8,6
 UBIC_ESTRELLASX2: .dword 493,277,607,85,200,139,320,65,635,375,23,484,566,369,169,247 // Posiciones iniciales en X de las estrellas grises
 UBIC_ESTRELLASY2: .dword 422,227,19,323,449,131,180,144,348,63,45,41,233,308,360,53 // Posiciones iniciales en Y de las estrellas grises
 TAM_ESTRELLAS2: .dword 5,3,2,4,6,1,4,2,3,6,1,5,2,5,2,3
+LUZ_PRENDIDA : .dword 0
 
 BASE_PIXELES: .dword 0,0,0,0,1,0,0,1,0,0,1,1,0,1,1,0,1,1,1,1,1,1,1,2,1,1,2,1,2,1,2,2,2,2,3,2,3,3,3,4,3,4,3,4,5,4,5,5,6,6,7,7,7,8,9,10,13,15,19 // Secuencia de números útilizada para graficar el semicirculo correspondiente a la base de la nave
 CUPULA_PIXELES_ARRIBA: .dword 0,0,0,0,1,0,0,1,0,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,2,1,1,2,1,1,2,1,1,2,1,2,1,2,2,2,2,2,2,2,3,3,3,3,3,4,4,4,5,6,6,7,11,13,17
@@ -41,7 +42,7 @@ main:
 	nuevo_frame:
 
 	cbnz x15, pintar_estrellas_blancas // Si el indice de cuando toca hacer mover las estrellas grises no es 0, salteo el pintar las estrellas grises
-	pintar_estrellas_grises: 
+	pintar_estrellas_grises:
 	movz x0, #0x7D7D
 	movk x0, #0x007B, lsl 16 // Establezco el color en el que va a pintar las estrellas
 	ldr x4, =UBIC_ESTRELLASX2 // Establezco que coordenadas en X va a utilizar para pintar las estrellas
@@ -57,16 +58,22 @@ main:
 	ldr x5, =UBIC_ESTRELLASY1 // Establezco que coordenadas en Y va a utilizar para pintar las estrellas
 	ldr x6, =TAM_ESTRELLAS1
 	bl pintar_estrellas // Pinto las estrellas
+
+	pintar_luces_nave:
+	ldr x4, =UBIC_LUZ_X // Establezco que coordenadas en X va a utilizar para pintar las estrellas
+	ldr x5, =UBIC_LUZ_Y // Establezco que coordenadas en Y va a utilizar para pintar las estrellas
+	bl luces_nave // Pinto las estrellas
+
+
 	bl arreglar_bug // Arreglo un bug gráfico en uno de los bordes
-	mov x9, RETARDO // Guardo en x9 el valor del retardo
-	
+
 
 	// Bucle de retardo
+	mov x9, RETARDO // Guardo en x9 el valor del retardo
 	pausa:
 	sub x9, x9, #1 
 	cbnz x9, pausa
-	
-	sub x17, x17, #1 // Resto un frame al indice para hacer movimiento de planetas
+
 	sub x15, x15, #1 // Resto un frame al indice para hacer movimiento de estrellas grises
 
 	b nuevo_frame // Vuelvo a comenzar el ciclo del frame
@@ -127,6 +134,48 @@ pintar_linea_horizontal:
 	ldur x9, [sp, #24]
 	add sp,sp, #32 // POP
 	br lr // Salida de la función
+
+	// PINTAR LINEA HORIZONTAL ESPECIAL
+	// -------------------------------
+	// Argumentos:
+	// 	X0 - color que se utilizará para pintar
+	// 	X1 - posición vertical (eje x) del pixel inicial. Posiciones validas [0-479]
+	// 	X2 - posición horizontal (eje y) del pixel inicial. Posiciones validas [0-639]
+	// 	X3 - cantidad de pixeles que se van a pintar. Mínimo 1
+	// 	X6 - color de las puntas
+pintar_linea_horizontal_especial:
+	sub sp, sp, #32 // PUSH
+	stur x9, [sp, #24] //PUSH
+	stur lr, [sp, #16] // PUSH
+	stur x3, [sp, #8] // PUSH
+	stur x13, [sp] // PUSH
+
+	// Calculo el indice de la primera dirección donde debo pintar
+	madd x9, x2, x22, x1 // x + (y * 640)
+	add x9, x20, x9, lsl 2 // Dirección de inicio + 4 * [x + (y * 640)]
+
+	add x13, x13, #4
+	lsl x13, x13, #2
+	sub x9, x9, x13
+	lsr x13, x13, #1
+	add x3, x3, x13
+
+	pintar_pixel4: // inicio el loop
+	stur w0, [x9] // Pinto el pixel
+	add x9, x9, #4 // Guardo en x9 la próxima dirección a pintar
+	sub x3, x3, #1 // Resto uno a la cantidad de pixeles que debo pintar
+	cbnz x3, pintar_pixel4 // Reviso si todavía tengo que pintar pixeles para decidir si seguir pintando o no
+
+
+	ldur x13, [sp] // POP
+	ldur x3, [sp, #8] // POP
+	ldur lr, [sp, #16] // POP
+	ldur x9, [sp, #24]
+	add sp,sp, #32 // POP
+	br lr // Salida de la función
+
+
+
 
 	// PINTAR LINEA DEPENDIENDO DEL COLOR DEL PIXEL
 	// -------------------------------
@@ -263,7 +312,7 @@ pintar_estrellas:
 	loop3: // Inicio del loop
 	ldur x1, [x4, #0] // Asigno en x1 la dirección en X de la estrella que debo pintar
 	ldur x2, [x5, #0] // Asigno en x2 la dirección en Y de la estrella que debo pintar
-	ldur x3, [x6, #0] // Asigno en x2 la dirección en Y de la estrella que debo pintar
+	ldur x3, [x6, #0] // Asigno en x3 el tamaño de la estrella que debo pintar
 
 	// Despinto la estrella anterior
 	add x7, xzr, x0
@@ -276,7 +325,7 @@ pintar_estrellas:
 	sub x1, x1, #1 // Resto uno a x1 para desplazar hacia la izquierda la posición de la estrella
 	bl estrella
 	
-	// Si x1 es 2, le asigno a x1 (X) 480 para que vuelva a dar la vuelta y le asigno a x2 (Y) un número pseudoaleatorio entre 0 y 639 para que las estrellas no sean repetitivas
+	// Si x1 es 4, le asigno a x1 (X) 480 para que vuelva a dar la vuelta y le asigno a x2 (Y) un número pseudoaleatorio entre 0 y 639 para que las estrellas no sean repetitivas
 	cmp x1, #4 
 	b.ne else1 // Reviso si x1 es diferente de 2 para saltearme todas las siguientes lineas
 
@@ -344,20 +393,23 @@ base_nave:
 	stur x2, [sp, #8] // PUSH	
 	stur x1, [sp] // PUSH	
 
-	movz x0, 0xA9C2
-	movk x0, 0x00A4, lsl 16
-
 
 	mov x1, #80 // Asigno a x1 las coordenadas en X de donde comienzo a dibujar la nave
 	mov x2, #300 // Asigno a x2 las coordenadas en Y de donde comienzo a dibujar la nave
 	mov x3, #480 // Asigno a x3 la cantidad de pixeles que va a tener la parte más amplia de la nave
 	mov x10, #60 // Asigno a x10 la mitad de la cantidad de pixeles que va a tener de altura la nave
 	ldr x11, =BASE_PIXELES // Guardo en x11 la dirección de los pasos para dibujar la circunferencia
-
+	mov x13, #0
 
 	loop5: // Inicio el bucle para pintar la parte de abajo de la base de la nave
 	ldur x12, [x11, #0] // Guardo en x12 el elemento del arreglo que corresponde
-	bl pintar_linea_horizontal // Llamada a la función para pintar la linea
+	movz x0, 0xD6EA
+	movk x0, 0x00D2, lsl 16
+	bl pintar_linea_horizontal_especial // Llamada a la función para pintar la linea
+	mov x13, x12
+	movz x0, 0xA9C2
+	movk x0, 0x00A4, lsl 16
+	bl pintar_linea_horizontal // Llamada a la función para pintar la linea	
 	add x1, x1, x12 // Agrego a la coordenada en X donde dibujo la linea la cantidad que diga segun los pasos para dibujar la circunferencia
 	sub x2, x2, #1  // Bajo una coordenada en Y
 	lsl x12, x12, #1 // Calculo auxiliar para la próxima linea
@@ -373,10 +425,18 @@ base_nave:
 	mov x3, #480 // Asigno a x3 la cantidad de pixeles que va a tener la parte más amplia de la nave
 	mov x10, #60 // Asigno a x10 la mitad de la cantidad de pixeles que va a tener de altura la nave
 	ldr x11, =BASE_PIXELES // Guardo en x11 la dirección de los pasos para dibujar la circunferencia
-
+	mov x13, #0
 	loop6: // Inicio el bucle para pintar la parte de arriba de la base de la nave
 	ldur x12, [x11, #0] // Guardo en x12 el elemento del arreglo que corresponde
-	bl pintar_linea_horizontal // Llamada a la función para pintar la linea
+	movz x0, 0xD6EA
+	movk x0, 0x00D2, lsl 16
+	bl pintar_linea_horizontal_especial // Llamada a la función para pintar la linea
+	add x13, x13, x12
+	mov x0, #2
+	udiv x13, x13, x0
+	movz x0, 0xA9C2
+	movk x0, 0x00A4, lsl 16
+	bl pintar_linea_horizontal // Llamada a la función para pintar la linea	
 	add x1, x1, x12 // Agrego a la coordenada en X donde dibujo la linea la cantidad que diga segun los pasos para dibujar la circunferencia
 	add x2, x2, #1 // Subo una coordenada en Y
 	lsl x12, x12, #1 // Calculo auxiliar para la próxima linea
@@ -385,6 +445,12 @@ base_nave:
 	sub x10, x10, #1 // Resto 1 a la cantidad de lineas que tengo que hacer
 	add x11, x11 , #8 // Paso al siguiente elemento del arreglo de pasos para dibujar la circunferencia
 	cbnz x10, loop6 // Reviso si ya hice todas las lineas
+	
+	movz x0, 0xD6EA
+	movk x0, 0x00D2, lsl 16
+	add x1, x1, #4
+	sub x3, x3, #8
+	bl pintar_linea_horizontal_especial
 
 
 	ldur x1, [sp] // POP
@@ -419,7 +485,7 @@ cupula_nave:
 	mov x3, #320 // Asigno a x3 la cantidad de pixeles que va a tener la parte más amplia de la nave
 	mov x10, #80 // Asigno a x10 la mitad de la cantidad de pixeles que va a tener de altura la nave
 	ldr x11, =CUPULA_PIXELES_ARRIBA // Guardo en x11 la dirección de los pasos para dibujar la circunferencia
-
+	mov x13, #0
 
 	loop7: // Inicio el bucle para pintar la parte de abajo de la base de la nave
 	ldur x12, [x11, #0] // Guardo en x12 el elemento del arreglo que corresponde
@@ -509,9 +575,19 @@ pintar_luz_nave:
 	mov x3, #23 // Asigno a x3 la cantidad de pixeles que va a tener la parte más amplia del foco de la nave
 	mov x10, #10 // Asigno a x10 la mitad de la cantidad de pixeles que va a tener de altura del foco de la nave
 	ldr x11,=LUZ_PIXELES // Guardo en x11 la dirección de los pasos para dibujar las luces
+	mov x13, #0
+
 
 	loop9: // Inicio el bucle para pintar la parte de abajo de la base de la luz
 	ldur x12, [x11, #0] // Guardo en x12 el elemento del arreglo que corresponde
+	movz x0, 0x3B42
+	movk x0, 0x003A, lsl 16
+	bl pintar_linea_horizontal_especial // Llamada a la función para pintar la linea
+	add x13, x13, x12
+	mov x0, #2
+	udiv x13, x13, x0
+	movz x0, 0xFF00
+	movk x0, 0x00FF, lsl 16
 	bl pintar_linea_horizontal // Llamada a la función para pintar la linea
 	add x1, x1, x12 // Agrego a la coordenada en X donde dibujo la linea la cantidad que diga segun los pasos para dibujar la circunferencia
 	sub x2, x2, #1 // Subo una coordenada en Y
@@ -522,14 +598,36 @@ pintar_luz_nave:
 	add x11, x11 , #8 // Paso al siguiente elemento del arreglo de pasos para dibujar la circunferencia
 	cbnz x10, loop9 // Reviso si ya hice todas las lineas
 
+	movz x0, 0x3B42
+	movk x0, 0x003A, lsl 16
+	bl pintar_linea_horizontal_especial
+	sub x2, x2, #1 // Subo una coordenada en Y
+	add x1, x1, #2
+	sub x3, x3, #4
+	bl pintar_linea_horizontal_especial
+	sub x2, x2, #1 // Subo una coordenada en Y
+	add x1, x1, #2
+	sub x3, x3, #4
+	bl pintar_linea_horizontal_especial
+
+
 	ldur x1, [x4, #0]
 	ldur x2, [x5, #0]
 	mov x3, #23 // Asigno a x3 la cantidad de pixeles que va a tener la parte más amplia del foco de la nave
 	mov x10, #10 // Asigno a x10 la mitad de la cantidad de pixeles que va a tener de altura el foco de la nave
 	ldr x11, =LUZ_PIXELES// Guardo en x11 la dirección de los pasos para dibujar la circunferencia
+	mov x13, #0
 
 	loop10: // Inicio el bucle para pintar la parte de arriba de la base de la nave
 	ldur x12, [x11, #0] // Guardo en x12 el elemento del arreglo que corresponde
+	movz x0, 0x3B42
+	movk x0, 0x003A, lsl 16
+	bl pintar_linea_horizontal_especial // Llamada a la función para pintar la linea
+	add x13, x13, x12
+	mov x0, #2
+	udiv x13, x13, x0
+	movz x0, 0xFF00
+	movk x0, 0x00FF, lsl 16
 	bl pintar_linea_horizontal // Llamada a la función para pintar la linea
 	add x1, x1, x12 // Agrego a la coordenada en X donde dibujo la linea la cantidad que diga segun los pasos para dibujar la circunferencia
 	add x2, x2, #1 // Subo una coordenada en Y
@@ -539,6 +637,19 @@ pintar_luz_nave:
 	sub x10, x10, #1 // Resto 1 a la cantidad de lineas que tengo que hacer
 	add x11, x11 , #8 // Paso al siguiente elemento del arreglo de pasos para dibujar la circunferencia
 	cbnz x10, loop10 // Reviso si ya hice todas las lineas
+
+	movz x0, 0x3B42
+	movk x0, 0x003A, lsl 16
+	bl pintar_linea_horizontal_especial
+	add x2, x2, #1 // Subo una coordenada en Y
+	add x1, x1, #2
+	sub x3, x3, #4
+	bl pintar_linea_horizontal_especial
+	add x2, x2, #1 // Subo una coordenada en Y
+	add x1, x1, #2
+	sub x3, x3, #4
+	bl pintar_linea_horizontal_especial
+
 
 	ldur x1, [sp] // POP
 	ldur x2, [sp, #8] // POP
