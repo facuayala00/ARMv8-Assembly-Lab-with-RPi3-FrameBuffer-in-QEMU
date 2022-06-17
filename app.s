@@ -7,18 +7,17 @@
 .data
 UBIC_ESTRELLASX1: .dword 472,519,411,627,286,315,170,21,69,600,159,108,350,218,48,440 // Posiciones iniciales en X de las estrellas blancas
 UBIC_ESTRELLASY1: .dword 222,550,303,75,237,100,189,53,391,303,600,13,517,420,586,634 // Posiciones iniciales en Y de las estrellas blancas
-TAM_ESTRELLAS1: .dword 5,7,8,5,8,4,6,7,4,7,7,5,6,4,8,6
+TAM_ESTRELLAS1: .dword 4,4,3,3,3,3,4,3,4,3,4,4,4,4,3,4
 UBIC_ESTRELLASX2: .dword 493,277,607,85,200,139,320,65,635,375,23,484,566,369,169,247 // Posiciones iniciales en X de las estrellas grises
 UBIC_ESTRELLASY2: .dword 422,227,19,323,449,131,180,144,348,63,45,41,233,308,360,53 // Posiciones iniciales en Y de las estrellas grises
-TAM_ESTRELLAS2: .dword 5,3,2,4,6,1,4,2,3,6,1,5,2,5,2,3
-LUZ_PRENDIDA : .dword 0
+TAM_ESTRELLAS2: .dword 2,2,2,1,3,3,1,1,2,3,2,1,3,2,1,2
+UBIC_LUZ_X:	.dword 114, 507, 309, 159, 460, 206, 413, 258, 361
+UBIC_LUZ_Y: .dword 286, 286, 336, 310, 310, 323, 323, 333, 333
 
 BASE_PIXELES: .dword 0,0,0,0,1,0,0,1,0,0,1,1,0,1,1,0,1,1,1,1,1,1,1,2,1,1,2,1,2,1,2,2,2,2,3,2,3,3,3,4,3,4,3,4,5,4,5,5,6,6,7,7,7,8,9,10,13,15,19 // Secuencia de números útilizada para graficar el semicirculo correspondiente a la base de la nave
 CUPULA_PIXELES_ARRIBA: .dword 0,0,0,0,1,0,0,1,0,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,2,1,1,2,1,1,2,1,1,2,1,2,1,2,2,2,2,2,2,2,3,3,3,3,3,4,4,4,5,6,6,7,11,13,17
 CUPULA_PIXELES_ABAJO: .dword 0,0,0,0,1,0,0,1,1,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,4,4,4,5,5,6,6,7,7,9,11,13,17
 LUZ_PIXELES: .dword 0,1,0,1,0,1,1,2,2,3
-UBIC_LUZ_X:	.dword 114, 507, 309, 159, 460, 206, 413, 258, 361
-UBIC_LUZ_Y: .dword 286, 286, 336, 310, 310, 323, 323, 333, 333
 
 .text
 
@@ -49,15 +48,17 @@ main:
 	ldr x5, =UBIC_ESTRELLASY2 // Establezco que coordenadas en Y va a utilizar para pintar las estrellas
 	ldr x6, =TAM_ESTRELLAS2
 	bl pintar_estrellas // Pinto las estrellas
-	mov x15, #3 // Escribo el indice de cuantos frame faltan para poder pintar de vuelta estrellas_grises
+	mov x15, #5 // Escribo el indice de cuantos frame faltan para poder pintar de vuelta estrellas_grises
 
 
 	pintar_estrellas_blancas:
+	cbnz x17, pintar_luces_nave
 	mov x0, #0xFFFFFF // Establezco el color en el que va a pintar las estrellas
 	ldr x4, =UBIC_ESTRELLASX1 // Establezco que coordenadas en X va a utilizar para pintar las estrellas
 	ldr x5, =UBIC_ESTRELLASY1 // Establezco que coordenadas en Y va a utilizar para pintar las estrellas
 	ldr x6, =TAM_ESTRELLAS1
 	bl pintar_estrellas // Pinto las estrellas
+	mov x17, #2
 
 	pintar_luces_nave:
 	ldr x4, =UBIC_LUZ_X // Establezco que coordenadas en X va a utilizar para pintar las estrellas
@@ -75,6 +76,7 @@ main:
 	cbnz x9, pausa
 
 	sub x15, x15, #1 // Resto un frame al indice para hacer movimiento de estrellas grises
+	sub x17, x17, #1
 
 	b nuevo_frame // Vuelvo a comenzar el ciclo del frame
 
@@ -223,37 +225,6 @@ pintar_linea_dependiendo_del_color_del_pixel:
 	add sp,sp, #32 // POP
 	br lr // Salida de la función
 
-
-
-	// PINTAR CUADRADO
-	// -------------------------------
-	// Argumentos:
-	// 	X0 - color que se utilizará para pintar
-	// 	X1 - posición vertical (eje x) del pixel inicial. Posiciones validas [0-479]
-	// 	X2 - posición horizontal (eje y) del pixel inicial. Posiciones validas [0-639]
-	// 	X3 - largo del lado del cuadrado
-pintar_cuadrado:
-	sub sp, sp, #32 // PUSH
-	stur lr, [sp, #24] // PUSH
-	stur x3, [sp, #16] // PUSH
-	stur x2, [sp, #8] // PUSH	
-	stur x1, [sp] // PUSH
-
-	add x10, xzr, x3 // Establezco x10 como la cantidad de lineas que debo hacer (por ejemplo, si "x10 = 5" hago 5 lineas horizontales (una debajo de la otra) de 5 pixeles)
-	loop: // Inicio del loop
-	bl pintar_linea_horizontal // Llamo a pintar linea horizontal con el color x0, altura en X x1 y altura en Y x2
-	sub x2, x2, #1 // Bajo una linea para que la próxima llamada se pinte la linea de abajo
-	sub x10, x10, #1 // Disminuyo en 1 la cantidad de pixeles que debo pintar
-	cbnz x10, loop // Reviso si todavía tengo que pintar pixeles para decidir si seguir pintando o no
-
-	ldur x1, [sp] // POP
-	ldur x2, [sp, #8] // POP
-	ldur x3, [sp, #16] // POP
-	ldur lr, [sp, #24] // POP
-	add sp,sp, #32 // POP
-	br lr // Salida de la función	
-
-
 	// ESTRELLA
 	// -------------------------------
 	// Explicación:
@@ -360,14 +331,30 @@ pintar_estrellas:
 	// Explicación:
 	// 	Hace una columna del color del fondo a la derecha para evitar uno errores graficos
 arreglar_bug:
-	mov x11, COLOR_FONDO
-	mov x1, #636 // Dirección inicial del bug en Y
+	sub sp, sp, #32 // PUSH
+	stur lr, [sp, #24] // PUSH
+	stur x3, [sp, #16] // PUSH
+	stur x2, [sp, #8] // PUSH	
+	stur x1, [sp] // PUSH
+
+
+	mov x0, COLOR_FONDO
+	mov x1, -6
 	mov x2, #0 // Dirección inicial del bug en X
-	madd x10, x2, x22, x1 // x + (y * 640)
+	mov x4, SCREEN_HEIGH
+	mov x3, #12
+	loop4:
+	bl pintar_linea_horizontal
+	sub x4, x4, #1
+	add x2, x2, #1
+	cbnz x4, loop4
+
+/*	madd x10, x2, x22, x1 // x + (y * 640)
 	add x10, x20, x10, lsl 2 // Dirección de inicio + 4 * [x + (y * 640)]
 	mov x12, SCREEN_HEIGH // Cantidad de lineas que hay que pintar
 	loop4: // Inicio bucle que pinta 4 pixeles de la linea
-	stur w11, [x10]
+
+ 	stur w11, [x10]
 	stur w11, [x10, #4]
 	stur w11, [x10, #8]
 	stur w11, [x10, #12]
@@ -377,10 +364,15 @@ arreglar_bug:
 	stur w11, [x10, #28]
 	add x10, x10, #2560 // Sumo a x10 lo que necesita para llegar a la siguiente linea
 	sub x12, x12, #1 // Resto 1 a la cantidad de lineas que me quedan por pintar
-	cbnz x12, loop4 // Reviso si me quedan lineas por pintar
+	cbnz x12, loop4 // Reviso si me quedan lineas por pintar */
 
 
-	br lr // Salida de la función
+	ldur x1, [sp] // POP
+	ldur x2, [sp, #8] // POP
+	ldur x3, [sp, #16] // POP
+	ldur lr, [sp, #24] // POP
+	add sp,sp, #32 // POP
+	br lr // Salida de la función	
 
 	// BASE NAVE
 	// -------------------------------
@@ -577,7 +569,6 @@ pintar_luz_nave:
 	ldr x11,=LUZ_PIXELES // Guardo en x11 la dirección de los pasos para dibujar las luces
 	mov x13, #0
 
-
 	loop9: // Inicio el bucle para pintar la parte de abajo de la base de la luz
 	ldur x12, [x11, #0] // Guardo en x12 el elemento del arreglo que corresponde
 	movz x0, 0x3B42
@@ -753,4 +744,3 @@ linea_from_array:
 
 fin:	
 	b fin
-	
