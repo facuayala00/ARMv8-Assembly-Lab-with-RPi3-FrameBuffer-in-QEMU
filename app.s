@@ -547,6 +547,97 @@ pintar_luz_nave:
 	add sp,sp, #32 // POP
 	br lr
 
+	// PINTAR FORMA COMPLEJA
+	// -------------------------------
+	// Argumentos:
+	// 	X0 - color que se utilizará para pintar las estrellas
+	// 	X1 - posición vertical (eje x) del pixel inicial. Posiciones validas [0-479]
+	// 	X2 - posición horizontal (eje y) del pixel inicial. Posiciones validas [0-639]
+	//	X4 - dirección del array
+	// 	X5 - tamaño maximo en Y
+
+pintar_forma_compleja:
+  sub sp, sp, 	#40 // PUSH
+  stur lr, [sp, #32 ] // PUSH
+  stur x6, [sp, #24 ] // PUSH
+  stur x5, [sp, #16  ] // PUSH	
+  stur x4, [sp, #8 ] // PUSH
+  stur x2, [sp] // PUSH
+
+  aff_downto_x5:			  // do
+    add x4, x4, #8		 	  //   x4 = x4+8 -> mueve x4 a la posicion que contiene la cantidad de lineas
+    ldur x10, [x4]			  //   x10 = *x4  -> cargo en x10 cantidad de lineas a dibujar
+    add x6, x4, #8		          //   x6 = x4+8 -> mover puntero a inicio del subarray
+    aff_dowto_x10:		          //   do
+      bl linea_from_array	          //     linea_from_array x0 x1 x2 x6
+      sub x5, x5, #1		          //     x5 = x5 - 1 -> resto a la cantidad total de lineas a dibujar
+      cbz x5, aff_end		          // 	 if x5 == 0 then EXIT
+      sub x10, x10, #1		          //     x10 = x10 - 1 -> resto 1 a la cantidad de lineas a dibujar
+      add x2, x2, #1		          // 	 x2 = x2 + 1 -> aumento posicion en y
+    cbnz x10, aff_dowto_x10	  	  //   while x10 != 0
+
+    encontrar_sig_delimitador:	  	  //   do
+      add x4, x4, #8		  	  //      x4 = x4+8
+      ldur x10, [x4]		  	  // 	  x10 = *x4
+
+      cmp x10, #-1
+    B.NE encontrar_sig_delimitador  	  // while x10 != -1
+
+  cbnz x5, aff_downto_x5		  // while x5 != 0
+
+  ldur x2, [sp] // POP
+  ldur x4, [sp, #8 ] // POP
+  ldur x5, [sp, #16  ] // POP	
+  ldur x6, [sp, #24 ] // POP
+  ldur lr, [sp, #32 ] // POP
+  add sp, sp, 	#40 // POP
+  br lr
+
+	// LINEA FROM ARRAY
+	// -------------------------------
+	// Argumentos:
+	// 	X0 - color que se utilizará para pintar las estrellas
+	// 	X1 - posición vertical (eje x) del pixel inicial. Posiciones validas [0-479]
+	// 	X2 - posición horizontal (eje y) del pixel inicial. Posiciones validas [0-639]
+	//	X6 - dirección del array
+linea_from_array:
+  sub sp, sp, 	#16 // PUSH
+  stur lr, [sp, #8 ] // PUSH
+  stur x6, [sp, #0 ] // PUSH
+
+  mov x12, #0 				    		// pintar = false
+  madd x11, x2, x22, x1 	 			// x11 = x + (y * 640)
+  add x11, x20, x11, lsl 2 				// x11 = Dirección de inicio + 4 * [x + (y * 640)]
+  ldur x9, [x6]						// x9 = *x6
+  linea_from_array_encontrar_sig_delimitador:   	// do 
+    cbnz x12, linea_from_array_pintar_pixels
+    B linea_from_array_no_pintar
+
+    linea_from_array_pintar_pixels:	    		//   if pintar then
+      linea_from_array_pintar_pixel:          		// 	   do
+      stur w0, [x11]                          		// 	     Pinto el pixel
+      add x11, x11, #4                        		// 	     Guardo en x11 la próxima dirección a pintar
+      sub x9, x9, #1                          		// 	     Resto uno a la cantidad de pixeles que debo pintar
+      cbz x9, linea_from_array_pintar_pixel   		// 	   while x9 != 0
+      mov x12, #0 			      		//     pintar=false
+      B linea_from_array_calcular_siguiente_direccion
+
+    linea_from_array_no_pintar:	    	    		//   else 
+      add x11, x11, x9, lsl #2	            		//     x11 = x11 + (4 * (*x6)) // mover direccion de x11 (*x6) pixels hacia adelante
+      mov x12, #1	     		    		//     pintar=true
+
+  linea_from_array_calcular_siguiente_direccion:
+  add x6, x6, #8	     		    		//   x6 = x6 + 8
+  ldur x9, [x6]						//   x9 = *x6
+
+  cmp x9, #-1
+  B.NE linea_from_array_encontrar_sig_delimitador 	// while *x6 != -1
+
+
+  ldur x6, [sp, #0 ] // POP
+  ldur lr, [sp, #8 ] // POP
+  add sp, sp, 	#16 // POP
+  br lr
 
 fin:	
 	b fin
