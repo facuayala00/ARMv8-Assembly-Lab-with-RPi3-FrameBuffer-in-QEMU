@@ -440,6 +440,10 @@ cupula_nave:
 	add sp,sp, #32 // POP
 	br lr // Salida de la función
 
+	// LUCES NAVE
+	// -------------------------------
+	// Explicación:
+	// 	Dibuja las luces de la nave basandose en los arreglos UBIC_LUZ_X y UBIC_LUZ_Y
 luces_nave:
 	sub sp, sp, #32 // PUSH
 	stur lr, [sp, #24] // PUSH
@@ -466,6 +470,13 @@ luces_nave:
 	add sp,sp, #32 // POP
 	br lr
 
+	// PINTA LUZ NAVE
+	// -------------------------------
+	// Explicación:
+	// 	Dibuja un circulo que representa la luz de la nave.
+	// Argumentos:
+	//	X4 - dirección de las coordenadas en X de las luces
+	// 	X5 - dirección de las coordenadas en Y de las luces
 pintar_luz_nave:
 	sub sp, sp, #32 // PUSH
 	stur lr, [sp, #24] // PUSH
@@ -516,10 +527,6 @@ pintar_luz_nave:
 	add sp,sp, #32 // POP
 	br lr
 
-	// PINTA LUZ NAVE
-	// -------------------------------
-	// Explicación:
-	// 	Dibuja un circulo que representa la luz de la nave.
 
 fin:	
 	b fin
