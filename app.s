@@ -31,18 +31,7 @@ main:
  	bl base_nave // Imprimir la base de la nave
 	bl cupula_nave // Imprimir cupula de la nave
 
-
-	ldr x4, =UBIC_LUZ_X
-	ldr x5, =UBIC_LUZ_Y
-	movz x0, 0xFF00
-	movk x0, 0x00FF, lsl 16
-	mov x14, #9
-	loop11:
-	bl pintar_luz_nave //Imprime las luces de la nave
-	add x4, x4, #8
-	add x5, x5, #8
-	sub x14, x14, #1
-	cbnz x14, loop11
+	bl luces_nave
 
 
 	// Ahora inicia un loop que está constantemente corriendo las estrellas hacia un costado (Hace 3 ciclos de estrellas blancas y 1 de estrellas grises "por vuelta")
@@ -450,6 +439,32 @@ cupula_nave:
 	ldur lr, [sp, #24] // POP
 	add sp,sp, #32 // POP
 	br lr // Salida de la función
+
+luces_nave:
+	sub sp, sp, #32 // PUSH
+	stur lr, [sp, #24] // PUSH
+	stur x5, [sp, #16] // PUSH
+	stur x4, [sp, #8] // PUSH	
+	stur x0, [sp] // PUSH
+
+	ldr x4, =UBIC_LUZ_X
+	ldr x5, =UBIC_LUZ_Y
+	movz x0, 0xFF00
+	movk x0, 0x00FF, lsl 16
+	mov x14, #9
+	loop11:
+	bl pintar_luz_nave //Imprime las luces de la nave
+	add x4, x4, #8
+	add x5, x5, #8
+	sub x14, x14, #1
+	cbnz x14, loop11
+
+	ldur x0, [sp] // POP
+	ldur x4, [sp, #8] // POP
+	ldur x5, [sp, #16] // POP
+	ldur lr, [sp, #24] // POP
+	add sp,sp, #32 // POP
+	br lr
 
 pintar_luz_nave:
 	sub sp, sp, #32 // PUSH
