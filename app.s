@@ -7,13 +7,13 @@
 .data
 UBIC_ESTRELLASX1: .dword 472,519,411,627,286,315,170,21,69,600,159,108,350,218,48,440 // Posiciones iniciales en X de las estrellas blancas
 UBIC_ESTRELLASY1: .dword 222,550,303,75,237,100,189,53,391,303,600,13,517,420,586,634 // Posiciones iniciales en Y de las estrellas blancas
-TAM_ESTRELLAS1: .dword 6,4,5,6,6,4,5,4,5,5,6,5,6,6,4,5
+TAM_ESTRELLAS1: .dword 4,4,3,3,3,3,4,3,4,3,4,4,4,4,3,4
 UBIC_ESTRELLASX2: .dword 493,277,607,85,200,139,320,65,635,375,23,484,566,369,169,247 // Posiciones iniciales en X de las estrellas grises
 UBIC_ESTRELLASY2: .dword 422,227,19,323,449,131,180,144,348,63,45,41,233,308,360,53 // Posiciones iniciales en Y de las estrellas grises
-TAM_ESTRELLAS2: .dword 1,2,2,3,4,2,1,4,3,1,3,4,2,3,4,3
+TAM_ESTRELLAS2: .dword 2,2,2,1,3,3,1,1,2,3,2,1,3,2,1,2
 UBIC_PLANETASX: .dword 348,227,108,558,482,43,625,535 // Posiciones iniciales en X de las estrellas grises
 UBIC_PLANETASY: .dword 408,75,230,175,279,59,378,264 // Posiciones iniciales en Y de las estrellas grises
-TAM_PLANETAS: .dword 12,7,10,9,10,11,7,8
+TAM_PLANETAS: .dword 9,12,9,11,8,10,12,11,8,11,8,10,9,9,12,9
 COLOR_PLANETAS: .dword 0xD51313, 0x883EF3, 0xF38B3E, 0x00AF64, 0xFFFF00, 0xA98307, 0x79553D, 0x1E2460
 UBIC_LUZ_X:	.dword 114, 507, 309, 159, 460, 206, 413, 258, 361
 UBIC_LUZ_Y: .dword 286, 286, 336, 310, 310, 323, 323, 333, 333
