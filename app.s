@@ -9,6 +9,7 @@ UBIC_ESTRELLASX1: .dword 472,519,411,627,286,315,170,21,69,600,159,108,350,218,4
 UBIC_ESTRELLASY1: .dword 222,550,303,75,237,100,189,53,391,303,600,13,517,420,586,634 // Posiciones iniciales en Y de las estrellas blancas
 UBIC_ESTRELLASX2: .dword 493,277,607,85,200,139,320,65,635,375,23,484,566,369,169,247 // Posiciones iniciales en X de las estrellas grises
 UBIC_ESTRELLASY2: .dword 422,227,19,323,449,131,180,144,348,63,45,41,233,308,360,53 // Posiciones iniciales en Y de las estrellas grises
+
 BASE_PIXELES: .dword 0,0,0,0,1,0,0,1,0,0,1,1,0,1,1,0,1,1,1,1,1,1,1,2,1,1,2,1,2,1,2,2,2,2,3,2,3,3,3,4,3,4,3,4,5,4,5,5,6,6,7,7,7,8,9,10,13,15,19 // Secuencia de números útilizada para graficar el semicirculo correspondiente a la base de la nave
 CUPULA_PIXELES_ARRIBA: .dword 0,0,0,0,1,0,0,1,0,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,2,1,1,2,1,1,2,1,1,2,1,2,1,2,2,2,2,2,2,2,3,3,3,3,3,4,4,4,5,6,6,7,11,13,17
 CUPULA_PIXELES_ABAJO: .dword 0,0,0,0,1,0,0,1,1,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,4,4,4,5,5,6,6,7,7,9,11,13,17
@@ -223,8 +224,6 @@ estrella:
 
 	br lr // Salida de la función	
 
-
-
 	// PINTAR ESTRELLAS
 	// -------------------------------
 	// Argumentos:
@@ -319,8 +318,8 @@ base_nave:
 	stur x2, [sp, #8] // PUSH	
 	stur x1, [sp] // PUSH	
 
-	movz x0, 0x7DFF
-	movk x0, 0x00C7, lsl 16
+	movz x0, 0xA9C2
+	movk x0, 0x00A4, lsl 16
 
 
 	mov x1, #80 // Asigno a x1 las coordenadas en X de donde comienzo a dibujar la nave
@@ -380,14 +379,14 @@ cupula_nave:
 	stur x2, [sp, #8] // PUSH	
 	stur x1, [sp] // PUSH	
 
-	movz x0, 0xCAFF
-	movk x0, 0x00C0, lsl 16
+	movz x0, 0xEAEA
+	movk x0, 0x00D6, lsl 16
 
-	movz x4, 0x8db2
-	movk x4, 0x86, lsl 16 // guardar color 0x868db2 en X4 para luego llamar a pintar_linea_dependiendo_del_color_del_pixel
+	movz x4, 0xBCC0
+	movk x4, 0x0089, lsl 16 // guardar color 0x868db2 en X4 para luego llamar a pintar_linea_dependiendo_del_color_del_pixel
 
-	movz x5, 0x7DFF
-	movk x5, 0x00C7, lsl 16 // guardar color 0xC77DFF en X5 para luego llamar a pintar_linea_dependiendo_del_color_del_pixel
+	movz x5, 0xA9C2
+	movk x5, 0x00A4, lsl 16 // guardar color 0xA4A9C2 en X5 para luego llamar a pintar_linea_dependiendo_del_color_del_pixel
 
 	mov x1, #160 // Asigno a x1 las coordenadas en X de donde comienzo a dibujar la nave
 	mov x2, #256 // Asigno a x2 las coordenadas en Y de donde comienzo a dibujar la nave
