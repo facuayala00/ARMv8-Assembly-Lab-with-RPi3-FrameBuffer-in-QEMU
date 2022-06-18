@@ -75,7 +75,6 @@ main:
 	bl pintar_planetas
     // Escribo el indice de cuantos frame faltan para poder pintar/mover de vuelta el planeta
 
-	pintar_luces_nave:
 	ldr x4, =UBIC_LUZ_X // Establezco que coordenadas en X va a utilizar para pintar las estrellas
 	ldr x5, =UBIC_LUZ_Y // Establezco que coordenadas en Y va a utilizar para pintar las estrellas
 	bl luces_nave // Pinto las estrellas
