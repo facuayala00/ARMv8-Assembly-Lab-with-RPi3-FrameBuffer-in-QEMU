@@ -1,4 +1,6 @@
 # lab-ODC
+![Project Gif](./sprites/project.gif)
+
 ## Installation
 1. Clone the repo.
 2. Run the following command to install the docker container and setup configuration and run script
