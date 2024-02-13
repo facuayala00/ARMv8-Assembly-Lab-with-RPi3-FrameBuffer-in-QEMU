@@ -1,4 +1,4 @@
-# lab-ODC
+# ARMv8 assembly project with RPi3 FrameBuffer in QEMU
 ![Project Gif](./sprites/project.gif)
 
 ## Installation
